@@ -86,5 +86,21 @@ def gather_buttons(scaleX, scaleY, scaleSize, screen):
     buttons.append(
         Button("StartLoadGame3", "onLoadGame", "", 0, 0, False, scaleX * 1586, scaleY * 556,
                173 * scaleSize))
+
+    buttons.append(
+    Button("OpenShop", "onGame", "", 0, 0, True, scaleX * 150, scaleY * 1000,
+           80 * scaleSize))
+    buttons.append(
+        Button("lockToPlanet", "onGame", "", 0, 0, False, scaleX * 0, scaleY * 0,
+               45 * scaleX, 48 * scaleY))
+    buttons.append(
+        Button("unlockPlanet", "onGame", "", 0, 0, False, scaleX * 0, scaleY * 0,
+               45 * scaleX, 48 * scaleY))
+    buttons.append(
+        Button("upgradePlanet", "onGame", "", 0, 0, False, scaleX * 0, scaleY * 0,
+               45 * scaleX, 48 * scaleY))
+    buttons.append(
+        Button("deletePlanet", "onGame", "", 0, 0, False, scaleX * 0, scaleY * 0,
+               45 * scaleX, 48 * scaleY))
     return buttons
 
