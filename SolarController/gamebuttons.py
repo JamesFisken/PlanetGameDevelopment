@@ -1,106 +1,110 @@
 import pygame
 import math
-class Button:
-    def __init__(self, NAME, TAG, DETAILS, minVal, maxVal, visible, x, y, *size):
 
-        self.startX = x  # used to base the range off of this constant, since the actual x/y may vary
-        self.startY = y
+class Button:
+    def __init__(self, name, tag, details, min_val, max_val, visible, x, y, *size):
+        self.start_x = x  # used to base the range off of this constant, since the actual x/y may vary
+        self.start_y = y
         self.x = x
         self.y = y
         self.active = False
-
         self.visible = visible
-        self.minVal = minVal  # if the button is a slider, then this value will be the minimum amount the slider can move to the left from its starting X
-        self.maxVal = maxVal
-
-        self.NAME = NAME
-        self.TAG = TAG
-        self.DETAILS = DETAILS
+        self.min_val = min_val  # if the button is a slider, then this value will be the minimum amount the slider can move to the left from its starting X
+        self.max_val = max_val
+        self.name = name
+        self.tag = tag
+        self.details = details
 
         if len(size) == 1:
             self.shape = "Circle"
             self.radius = size[0]
         elif len(size) == 2:
             self.shape = "Rectangle"
-            self.xLength = size[0]
-            self.yLength = size[1]
+            self.x_length = size[0]
+            self.y_length = size[1]
 
-    def is_clicked(self, posx,
-                   posy):  # takes 2 positional arguments from a mouse click and checks whether the button would be clicked
+    def is_clicked(self, pos_x, pos_y):  # takes 2 positional arguments from a mouse click and checks whether the button would be clicked
         if self.shape == "Circle":  # if the button is circular
-            distance = math.sqrt(abs(self.x - posx) ** 2 + abs(self.y - posy) ** 2)
+            distance = math.sqrt(abs(self.x - pos_x) ** 2 + abs(self.y - pos_y) ** 2)
             if distance < self.radius:  # if the distance is less than the radius then the button must be clicked
                 return True
             else:
                 return False
         if self.shape == "Rectangle":
-            if posx > self.x and posx < self.x + self.xLength and posy > self.y and posy < self.y + self.yLength:
+            if pos_x > self.x and pos_x < self.x + self.x_length and pos_y > self.y and pos_y < self.y + self.y_length:
                 return True
             else:
                 return False
 
-def gather_buttons(scaleX, scaleY, scaleSize, screen):
+
+def gather_buttons(scale_x, scale_y, scale_size, screen):
     buttons = []
     buttons.append(
-        Button("NewGame", "onTitleScreen", "", 0, 0, False, scaleX * 705, scaleY * 555,
-               170 * scaleSize))
+        Button("new_game", "on_title_screen", "", 0, 0, False, scale_x * 705, scale_y * 555,
+               170 * scale_size))
     buttons.append(
-        Button("LoadGame", "onTitleScreen", "", 0, 0, False, scaleX * 1487, scaleY * 568,
-               115 * scaleSize))
+        Button("load_game", "on_title_screen", "", 0, 0, False, scale_x * 1487, scale_y * 568,
+               115 * scale_size))
     buttons.append(
-        Button("Settings", "onTitleScreen", "", 0, 0, False, scaleX * 1127, scaleY * 938,
-               130 * scaleSize))
+        Button("settings", "on_title_screen", "", 0, 0, False, scale_x * 1127, scale_y * 938,
+               130 * scale_size))
 
     buttons.append(
-        Button("ExitSettings", "onSettings", "", 0, 0, False, scaleX * 771, scaleY * 883,
-               673 * scaleX, 155 * scaleY))
+        Button("exit_settings", "on_settings", "", 0, 0, False, scale_x * 771, scale_y * 883,
+               673 * scale_x, 155 * scale_y))
     buttons.append(
-        Button("GraphicsSlider", "onSettings", "", 0, 337 * scaleX, True, scaleX * 1062, scaleY * 538,
-               28 * scaleSize))
+        Button("graphics_slider", "on_settings", "", 0, 337 * scale_x, False, scale_x * 1062, scale_y * 538,
+               28 * scale_size))
     buttons.append(
-        Button("VolumeSlider", "onSettings", "", 0, 337 * scaleX, True, scaleX * 1062, scaleY * 673,
-               28 * scaleSize))
+        Button("volume_slider", "on_settings", "", 0, 337 * scale_x, False, scale_x * 1062, scale_y * 673,
+               28 * scale_size))
 
     buttons.append(
-        Button("BackToTitleScreen", "onNewGame", "", 0, 0, False, scaleX * 684, scaleY * 918,
-               917 * scaleX, 163 * scaleY))
+        Button("back_to_title_screen", "on_new_game", "", 0, 0, False, scale_x * 684, scale_y * 918,
+               917 * scale_x, 163 * scale_y))
     buttons.append(
-        Button("StartNewGame1", "onNewGame", "", 0, 0, False, scaleX * 703, scaleY * 556,
-               173 * scaleSize))
+        Button("start_new_game1", "on_new_game", "", 0, 0, False, scale_x * 703, scale_y * 556,
+               173 * scale_size))
     buttons.append(
-        Button("StartNewGame2", "onNewGame", "", 0, 0, False, scaleX * 1144, scaleY * 556,
-               173 * scaleSize))
+        Button("start_new_game2", "on_new_game", "", 0, 0, False, scale_x * 1144, scale_y * 556,
+               173 * scale_size))
     buttons.append(
-        Button("StartNewGame3", "onNewGame", "", 0, 0, False, scaleX * 1586, scaleY * 556,
-               173 * scaleSize))
+        Button("start_new_game3", "on_new_game", "", 0, 0, False, scale_x * 1586, scale_y * 556,
+               173 * scale_size))
 
     buttons.append(
-        Button("BackToTitleScreen", "onLoadGame", "", 0, 0, False, scaleX * 684, scaleY * 918,
-               917 * scaleX, 163 * scaleY))
+        Button("back_to_title_screen", "on_load_game", "", 0, 0, False, scale_x * 684, scale_y * 918,
+               917 * scale_x, 163 * scale_y))
     buttons.append(
-        Button("StartLoadGame1", "onLoadGame", "", 0, 0, False, scaleX * 703, scaleY * 556,
-               173 * scaleSize))
+        Button("start_load_game1", "on_load_game", "", 0, 0, False, scale_x * 703, scale_y * 556,
+               173 * scale_size))
     buttons.append(
-        Button("StartLoadGame2", "onLoadGame", "", 0, 0, False, scaleX * 1144, scaleY * 556,
-               173 * scaleSize))
+        Button("start_load_game2", "on_load_game", "", 0, 0, False, scale_x * 1144, scale_y * 556,
+               173 * scale_size))
     buttons.append(
-        Button("StartLoadGame3", "onLoadGame", "", 0, 0, False, scaleX * 1586, scaleY * 556,
-               173 * scaleSize))
+        Button("start_load_game3", "on_load_game", "", 0, 0, False, scale_x * 1586, scale_y * 556,
+               173 * scale_size))
+
 
     buttons.append(
-    Button("OpenShop", "onGame", "", 0, 0, True, scaleX * 150, scaleY * 1000,
-           80 * scaleSize))
+        Button("open_shop", "on_game", "", 0, 0, False, scale_x * 245, scale_y * 920,
+               115 * scale_size))
     buttons.append(
-        Button("lockToPlanet", "onGame", "", 0, 0, False, scaleX * 0, scaleY * 0,
-               45 * scaleX, 48 * scaleY))
+        Button("close_shop", "on_game", "", 0, 0, False, scale_x * 245, scale_y * 134,
+               105 * scale_size))
+
     buttons.append(
-        Button("unlockPlanet", "onGame", "", 0, 0, False, scaleX * 0, scaleY * 0,
-               45 * scaleX, 48 * scaleY))
+        Button("lock_to_planet", "on_game", "", 0, 0, False, scale_x * 0, scale_y * 0,
+               45 * scale_x, 48 * scale_y))
     buttons.append(
-        Button("upgradePlanet", "onGame", "", 0, 0, False, scaleX * 0, scaleY * 0,
-               45 * scaleX, 48 * scaleY))
+        Button("unlock_planet", "on_game", "", 0, 0, False, scale_x * 0, scale_y * 0,
+               45 * scale_x, 48 * scale_y))
     buttons.append(
-        Button("deletePlanet", "onGame", "", 0, 0, False, scaleX * 0, scaleY * 0,
-               45 * scaleX, 48 * scaleY))
+        Button("upgrade_planet", "on_game", "", 0, 0, False, scale_x * 0, scale_y * 0,
+               45 * scale_x, 48 * scale_y))
+    buttons.append(
+        Button("delete_planet", "on_game", "", 0, 0, False, scale_x * 0, scale_y * 0,
+               45 * scale_x, 48 * scale_y))
     return buttons
+
 
