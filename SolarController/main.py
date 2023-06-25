@@ -5,6 +5,7 @@ import pygame
 from pygame.locals import *
 import gamebuttons
 
+
 # Colours
 BACKGROUND = (5, 10, 51)
 
@@ -32,7 +33,7 @@ fps_list = []
 dt = 1  # delta time, so that the speed of the game isn't dependent on fps
 time_multiplier = 5000000
 
-width, height = 1600, 900
+width, height = 1824, 1036
 scale_x, scale_y = width / 1920, height / 1080
 scale_size = min(width / 1920, height / 1080)
 
@@ -54,34 +55,9 @@ TRUE_PIXEL_DISTANCE = 1515000000  # this number was calculated by taking the dis
 
 screen = pygame.display.set_mode((width, height))
 
-# Load sprites
-# backgrounds
-title_screen = pygame.image.load('Sprites/BaseScreens/TitleScreen.png').convert_alpha()
-settings_screen = pygame.image.load('Sprites/BaseScreens/Settings.png').convert_alpha()
-new_game_page = pygame.image.load('Sprites/BaseScreens/NewGamePage.png').convert_alpha()
-load_game_page = pygame.image.load('Sprites/BaseScreens/LoadGamePage.png').convert_alpha()
+# load python images
+from loadimages import *
 
-# sprites
-earth = pygame.image.load('Sprites/Earth2.png').convert_alpha()
-gas_giant = pygame.image.load('Sprites/GasGiant2.png').convert_alpha()
-
-# GUI
-shop_panel = pygame.image.load('Sprites/Shop/ShopPanel.png').convert_alpha()
-open_shop = pygame.image.load('Sprites/Shop/OpenShop.png').convert_alpha()
-planet_selection_lock = pygame.image.load('Sprites/PlanetSelectionlock.png').convert_alpha()
-planet_selection_unlock = pygame.image.load('Sprites/PlanetSelectionUnlock.png').convert_alpha()
-
-
-# Transform sprites to the correct size
-title_screen = pygame.transform.scale(title_screen, (width, height))
-settings_screen = pygame.transform.scale(settings_screen, (width, height))
-new_game_page = pygame.transform.scale(new_game_page, (width, height))
-load_game_page = pygame.transform.scale(load_game_page, (width, height))
-
-planet_selection_lock = pygame.transform.scale(planet_selection_lock, (110, 40))
-planet_selection_unlock = pygame.transform.scale(planet_selection_unlock, (110, 40))
-shop_panel = pygame.transform.scale(shop_panel, (scale_x*450, scale_y*1047))
-open_shop = pygame.transform.scale(open_shop, (scale_x*220, scale_y*220))
 # global varianles
 lock_offset_x = 0
 lock_offset_y = 0
@@ -92,8 +68,30 @@ start_pan_x = 0
 start_pan_y = 0
 
 planet_locked = True  # if there is a planet that is locked
-shop = False # shows if on shop
+shop = False  # shows if on shop
+shop_page = 1  # shows current shop page
+balance = 200000  # player balance
+
 # classes
+class ShopCard:
+    def __init__(self, name, cost, page, position, image_afford, image_unafford):
+        self.name = name
+        self.cost = cost
+        self.page = page
+        self.position = position
+        self.image_afford = image_afford
+        self.image_unafford = image_unafford
+
+        self.x = 23 * scale_x
+        self.y = (200 * scale_x) * position + 208*scale_y
+    def display(self, page, balance):
+
+        if self.page == page:
+            if self.cost <= balance:
+                screen.blit(self.image_afford, (self.x, self.y))
+            else:
+                screen.blit(self.image_unafford, (self.x, self.y))
+
 class CelestialBody:
     objs = []  # registrar
 
@@ -219,11 +217,21 @@ class CelestialBody:
 
 
 celestial_bodies = []  # create a list to contain all planets
+shop_cards = []  # create a list to contain all shop cards
 celestial_bodies.append(CelestialBody(650, 450, 0, 0.00001280198, SOLAR_MASS * 0.000003, 30, earth, True))
 celestial_bodies.append(CelestialBody(850, 450, 0, 0, SOLAR_MASS, 80, gas_giant, False))
 
 pixels = []
 
+shop_cards.append(ShopCard("Moon", 350, 1, 0, moon_card_afford, moon_card_unafford))
+shop_cards.append(ShopCard("Earth", 900, 1, 1, earth_card_afford, earth_card_unafford))
+shop_cards.append(ShopCard("Satellite", 2600, 1, 2, satellite_card_afford, satellite_card_unafford))
+shop_cards.append(ShopCard("Jupiter", 9500, 1, 3, jupiter_card_afford, jupiter_card_unafford))
+
+shop_cards.append(ShopCard("Lux Aurantus", 30000, 2, 0, luxaurantius_card_afford, luxaurantius_card_unafford))
+shop_cards.append(ShopCard("Ondori", 50000, 2, 1, ondori_card_afford, ondori_card_unafford))
+shop_cards.append(ShopCard("Malakorus", 80000, 2, 2, malakorus_card_afford, malakorus_card_unafford))
+shop_cards.append(ShopCard("Enduros", 150000, 2, 3, enduros_card_afford, enduros_card_unafford))
 
 def change_scene(newScene, gameState, buttons):
     for key in gameState.keys():
@@ -237,7 +245,16 @@ def change_scene(newScene, gameState, buttons):
         else:
             button.active = False
     get_button("close_shop", buttons).active = False  # make the shop closed button disabled
-
+    # make sure the page buttons are also disabled
+    get_button("shop_page_1", buttons).active = False
+    get_button("shop_page_2", buttons).active = False
+    get_button("shop_page_3", buttons).active = False
+    get_button("shop_page_4", buttons).active = False
+    # make sure buy buttons are also disabled
+    get_button("buy_1", buttons).active = False
+    get_button("buy_2", buttons).active = False
+    get_button("buy_3", buttons).active = False
+    get_button("buy_4", buttons).active = False
 
 def get_button(name, buttons):
     for button in buttons:
@@ -245,16 +262,27 @@ def get_button(name, buttons):
             return button
     return False
 
+def select_button(buttons, function):
+    for button in buttons:
+        if button.name == "lock_to_planet":
+            button.active = function
+        if button.name == "upgrade_planet":
+            button.active = function
+        if button.name == "delete_planet":
+            button.active = function
+
 #pre-loop setup
 buttons = gamebuttons.gather_buttons(scale_x, scale_y, scale_size, screen)  # setups the buttons in the gamebuttons file
 change_scene("on_title_screen", game_state, buttons)  # start the game on the title screen
 
 # Game loop.
 while running:
+    print(balance)
     frame_fps = clock.get_fps()
     dt = clock.tick(fps) / 1000 * time_multiplier  # find the amount of time between each frame in seconds
 
     mouse_x, mouse_y = pygame.mouse.get_pos()  # gets user mouse inputs
+
     if game_state.get("on_title_screen"):  # if user is on the title screen
         screen.blit(title_screen, (0, 0))  # display the title screen
     elif game_state.get("on_settings"):
@@ -268,21 +296,34 @@ while running:
             body.update()
             body.display()
             if body.show_options:  # selected onto a planet
+                # positioning of the planet menu buttons
                 button = get_button("lock_to_planet", buttons)
-                button.x = body.true_x - 55
-                button.y = body.true_y - 20
+                button.x = body.true_x - 55 * scale_x
+                button.y = body.true_y - 20 * scale_y
 
                 button = get_button("upgrade_planet", buttons)
-                button.x = body.true_x - 19
-                button.y = body.true_y - 20
+                button.x = body.true_x - 19 * scale_x
+                button.y = body.true_y - 20 * scale_y
 
                 button = get_button("delete_planet", buttons)
-                button.x = body.true_x + 18
-                button.y = body.true_y - 20
+                button.x = body.true_x + 18 * scale_x
+                button.y = body.true_y - 20 * scale_y
         if shop:  # if the shop is open then display the shop
             screen.blit(shop_panel, (15*scale_x, 15*scale_y))
+            #dislay shop page buttons depending on what page your on
+
+            if shop_page == 1:
+                screen.blit(page_button_1, (23 * scale_x, 157 * scale_y))
+            elif shop_page == 2:
+                screen.blit(page_button_2, (23 * scale_x, 157 * scale_y))
+            elif shop_page == 3:
+                screen.blit(page_button_3, (23 * scale_x, 157 * scale_y))
+            elif shop_page == 4:
+                screen.blit(page_button_4, (23 * scale_x, 157 * scale_y))
+            for card in shop_cards:
+                card.display(shop_page, balance)
         else:
-            screen.blit(open_shop, (138*scale_x, 810*scale_y))
+            screen.blit(open_shop, (111*scale_x, 810*scale_y))
 
     elif game_state.get("on_load_game"):
         screen.blit(load_game_page, (0, 0))
@@ -306,6 +347,7 @@ while running:
             pygame.quit()
             sys.exit()
         elif event.type == MOUSEBUTTONDOWN:  # user clicks
+            #print(mouse_x / scale_x, mouse_y / scale_y)
             if game_state.get("on_game"):  # if on the main game tab
                 if event.button == 1:  # left click
                     if panning is False:
@@ -320,26 +362,13 @@ while running:
                         if body.is_clicked(mouse_x, mouse_y):
                             if body.show_options:  # alternate whether the planet's options are showing
                                 body.show_options = False
-                                for button in buttons:
-                                    if button.name == "lock_to_planet":
-                                        button.active = False
-                                    if button.name == "upgrade_planet":
-                                        button.active = False
-                                    if button.name == "delete_planet":
-                                        button.active = False
+                                select_button(buttons, False)  # turn off all buttons
                             else:
                                 for o_body in celestial_bodies:  # turn off all planet options
                                     o_body.show_options = False
 
                                 body.show_options = True  # turn selected planet option on
-
-                                for button in buttons:
-                                    if button.name == "lock_to_planet":
-                                        button.active = True
-                                    if button.name == "upgrade_planet":
-                                        button.active = True
-                                    if button.name == "delete_planet":
-                                        button.active = True
+                                select_button(buttons, True)  # turn on all buttons
                             # body.showOptions = not body.showOptions
 
                 elif event.button == 4:  # Scroll wheel up
@@ -396,17 +425,66 @@ while running:
                             #shop buttons
 
                             if button.name == "open_shop" and not shop:
-                                get_button("close_shop", buttons).active = True
+                                get_button("close_shop", buttons).active = True  # activate close shop button
+                                # enable other shop sprites
+                                get_button("shop_page_1", buttons).active = True
+                                get_button("shop_page_2", buttons).active = True
+                                get_button("shop_page_3", buttons).active = True
+                                get_button("shop_page_4", buttons).active = True
+                                get_button("buy_1", buttons).active = True
+                                get_button("buy_2", buttons).active = True
+                                get_button("buy_3", buttons).active = True
+                                get_button("buy_4", buttons).active = True
                                 shop = True
-                                button.active = False
+                                button.active = False   # disable open shop button
+
+
                             if button.name == "close_shop" and shop:
-                                get_button("open_shop", buttons).active = True
+                                get_button("open_shop", buttons).active = True  # activate open shop button
+                                # disable other shop sprites
+                                get_button("shop_page_1", buttons).active = False
+                                get_button("shop_page_2", buttons).active = False
+                                get_button("shop_page_3", buttons).active = False
+                                get_button("shop_page_4", buttons).active = False
+                                get_button("buy_1", buttons).active = False
+                                get_button("buy_2", buttons).active = False
+                                get_button("buy_3", buttons).active = False
+                                get_button("buy_4", buttons).active = False
                                 shop = False
-                                button.active = False
+                                button.active = False  # disable close shop button
+
+                            if button.name == "shop_page_1" and shop:
+                                shop_page = 1
+                            if button.name == "shop_page_2" and shop:
+                                shop_page = 2
+                            if button.name == "shop_page_3" and shop:
+                                shop_page = 3
+                            if button.name == "shop_page_4" and shop:
+                                shop_page = 4
+
+                            # check which button has been clicked and then link that button to the card
+                            if button.name == "buy_1" and shop:
+                                for card in shop_cards:
+                                    if card.page == shop_page and card.position == 0:
+                                        if balance >= card.cost:
+                                            balance -= card.cost
+                            if button.name == "buy_2" and shop:
+                                for card in shop_cards:
+                                    if card.page == shop_page and card.position == 1:
+                                        if balance >= card.cost:
+                                            balance -= card.cost
+                            if button.name == "buy_3" and shop:
+                                for card in shop_cards:
+                                    if card.page == shop_page and card.position == 2:
+                                        if balance >= card.cost:
+                                            balance -= card.cost
+                            if button.name == "buy_4" and shop:
+                                for card in shop_cards:
+                                    if card.page == shop_page and card.position == 3:
+                                        if balance >= card.cost:
+                                            balance -= card.cost
 
                             #planet buttons
-
-
                             if button.name == "lock_to_planet":
                                 for body in celestial_bodies:
                                     if body.show_options:
@@ -426,6 +504,7 @@ while running:
                                             planet_locked = False  # if the planet is also locked then go into panning mode
 
                                         celestial_bodies.remove(body)  # remove planet
+                                select_button(buttons, False)
 
         elif event.type == MOUSEBUTTONUP:  # user unclicks
             panning = False

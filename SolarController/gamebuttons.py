@@ -53,10 +53,10 @@ def gather_buttons(scale_x, scale_y, scale_size, screen):
         Button("exit_settings", "on_settings", "", 0, 0, False, scale_x * 771, scale_y * 883,
                673 * scale_x, 155 * scale_y))
     buttons.append(
-        Button("graphics_slider", "on_settings", "", 0, 337 * scale_x, False, scale_x * 1062, scale_y * 538,
+        Button("graphics_slider", "on_settings", "", 0, 337 * scale_x, True, scale_x * 1062, scale_y * 538,
                28 * scale_size))
     buttons.append(
-        Button("volume_slider", "on_settings", "", 0, 337 * scale_x, False, scale_x * 1062, scale_y * 673,
+        Button("volume_slider", "on_settings", "", 0, 337 * scale_x, True, scale_x * 1062, scale_y * 673,
                28 * scale_size))
 
     buttons.append(
@@ -87,24 +87,50 @@ def gather_buttons(scale_x, scale_y, scale_size, screen):
 
 
     buttons.append(
-        Button("open_shop", "on_game", "", 0, 0, False, scale_x * 245, scale_y * 920,
+        Button("open_shop", "on_game", "", 0, 0, False, scale_x * 221, scale_y * 921,
                115 * scale_size))
     buttons.append(
-        Button("close_shop", "on_game", "", 0, 0, False, scale_x * 245, scale_y * 134,
-               105 * scale_size))
+        Button("close_shop", "on_game", "", 0, 0, False, scale_x * 221, scale_y * 86,
+               67 * scale_size))
+    buttons.append(
+        Button("shop_page_1", "on_game", "", 0, 0, False, scale_x * 23, scale_y * 157,
+               97 * scale_x, 39 * scale_y))
+    buttons.append(
+        Button("shop_page_2", "on_game", "", 0, 0, False, scale_x * 124, scale_y * 157,
+               97 * scale_x, 39 * scale_y))
+    buttons.append(
+        Button("shop_page_3", "on_game", "", 0, 0, False, scale_x * 224, scale_y * 157,
+               97 * scale_x, 39 * scale_y))
+    buttons.append(
+        Button("shop_page_4", "on_game", "", 0, 0, False, scale_x * 324, scale_y * 157,
+               97 * scale_x, 39 * scale_y))
+
+    buttons.append(
+        Button("buy_1", "on_game", "", 0, 0, False, scale_x * 213, scale_y * 331,
+               187 * scale_x, 59 * scale_y))
+    buttons.append(
+        Button("buy_2", "on_game", "", 0, 0, False, scale_x * 213, scale_y * 531,
+               187 * scale_x, 59 * scale_y))
+    buttons.append(
+        Button("buy_3", "on_game", "", 0, 0, False, scale_x * 213, scale_y * 731,
+               187 * scale_x, 59 * scale_y))
+    buttons.append(
+        Button("buy_4", "on_game", "", 0, 0, False, scale_x * 213, scale_y * 931,
+               187 * scale_x, 59 * scale_y))
+
 
     buttons.append(
         Button("lock_to_planet", "on_game", "", 0, 0, False, scale_x * 0, scale_y * 0,
-               45 * scale_x, 48 * scale_y))
+               39 * scale_x, 39 * scale_y))
     buttons.append(
         Button("unlock_planet", "on_game", "", 0, 0, False, scale_x * 0, scale_y * 0,
-               45 * scale_x, 48 * scale_y))
+               39 * scale_x, 39 * scale_y))
     buttons.append(
         Button("upgrade_planet", "on_game", "", 0, 0, False, scale_x * 0, scale_y * 0,
-               45 * scale_x, 48 * scale_y))
+               39 * scale_x, 39 * scale_y))
     buttons.append(
         Button("delete_planet", "on_game", "", 0, 0, False, scale_x * 0, scale_y * 0,
-               45 * scale_x, 48 * scale_y))
+               39 * scale_x, 39 * scale_y))
     return buttons
 
 
