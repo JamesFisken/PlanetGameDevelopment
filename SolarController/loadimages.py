@@ -1,7 +1,16 @@
 import pygame
-width, height = 1920, 1080
-scale_x, scale_y = width / 1920, height / 1080
-scale_size = min(width / 1920, height / 1080)
+from pygame.locals import *
+pygame.init()
+
+width, height = 960, 540
+flags = pygame.HWSURFACE | pygame.DOUBLEBUF  # Enable hardware surface and double buffering
+screen = pygame.display.set_mode((width, height), flags)
+#screen
+width, height = 960, 540
+scale_x, scale_y = width / 1920, height / 1080 # used for changing the scale of sprites with the aspect ratio
+scale_size = min(scale_x, scale_y)
+
+
 # Load sprites
 # backgrounds
 title_screen = pygame.image.load('Sprites/BaseScreens/TitleScreen.png').convert_alpha()
@@ -10,8 +19,17 @@ new_game_page = pygame.image.load('Sprites/BaseScreens/NewGamePage.png').convert
 load_game_page = pygame.image.load('Sprites/BaseScreens/LoadGamePage.png').convert_alpha()
 
 # sprites
+sun = pygame.image.load('Sprites/Sun.png').convert_alpha()
+moon = pygame.image.load('Sprites/Moon.png').convert_alpha()
 earth = pygame.image.load('Sprites/Earth.png').convert_alpha()
-gas_giant = pygame.image.load('Sprites/Enduros.png').convert_alpha()
+satellite = pygame.image.load('Sprites/Satellite.png').convert_alpha()
+jupiter = pygame.image.load('Sprites/Jupiter.png').convert_alpha()
+luxaurantius = pygame.image.load('Sprites/LuxAurantius.png').convert_alpha()
+malakorus = pygame.image.load('Sprites/Malakorus.png').convert_alpha()
+ondori = pygame.image.load('Sprites/Ondori.png').convert_alpha()
+enduros = pygame.image.load('Sprites/Enduros.png').convert_alpha()
+vulkan = pygame.image.load('Sprites/Vulkan.png').convert_alpha()
+asteroid = pygame.image.load('Sprites/Asteroids1.png').convert_alpha()
 
 # GUI
 shop_panel = pygame.image.load('Sprites/Shop/ShopPanel.png').convert_alpha()

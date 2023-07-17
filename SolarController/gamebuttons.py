@@ -25,7 +25,7 @@ class Button:
 
     def is_clicked(self, pos_x, pos_y):  # takes 2 positional arguments from a mouse click and checks whether the button would be clicked
         if self.shape == "Circle":  # if the button is circular
-            distance = math.sqrt(abs(self.x - pos_x) ** 2 + abs(self.y - pos_y) ** 2)
+            distance = math.sqrt((self.x - pos_x) ** 2 + (self.y - pos_y) ** 2)
             if distance < self.radius:  # if the distance is less than the radius then the button must be clicked
                 return True
             else:
