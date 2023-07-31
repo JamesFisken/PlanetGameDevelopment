@@ -17,6 +17,7 @@ title_screen = pygame.image.load('Sprites/BaseScreens/TitleScreen.png').convert_
 settings_screen = pygame.image.load('Sprites/BaseScreens/Settings.png').convert_alpha()
 new_game_page = pygame.image.load('Sprites/BaseScreens/NewGamePage.png').convert_alpha()
 load_game_page = pygame.image.load('Sprites/BaseScreens/LoadGamePage.png').convert_alpha()
+space_screen = pygame.image.load('Sprites/BaseScreens/space.png').convert_alpha()
 
 # sprites
 sun = pygame.image.load('Sprites/Sun.png').convert_alpha()
@@ -62,6 +63,7 @@ satellite_card_unafford = pygame.image.load('Sprites/Shop/Cards/SatelliteUnaffor
 
 
 # Transform sprites to the correct size
+space_screen = pygame.transform.scale(space_screen, (space_screen.get_width()*1.2, space_screen.get_height()*1.2))
 title_screen = pygame.transform.scale(title_screen, (width, height))
 settings_screen = pygame.transform.scale(settings_screen, (width, height))
 new_game_page = pygame.transform.scale(new_game_page, (width, height))

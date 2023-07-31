@@ -131,6 +131,9 @@ def gather_buttons(scale_x, scale_y, scale_size, screen):
     buttons.append(
         Button("delete_planet", "on_game", "", 0, 0, False, scale_x * 0, scale_y * 0,
                39 * scale_x, 39 * scale_y))
+    buttons.append(
+        Button("time_slider", "on_game", "", 0, 337 * scale_x, True, scale_x * 1062, scale_y * 673,
+               28 * scale_size))
     return buttons
 
 
