@@ -33,6 +33,7 @@ vulkan = pygame.image.load('Sprites/Vulkan.png').convert_alpha()
 asteroid = pygame.image.load('Sprites/Asteroids1.png').convert_alpha()
 
 # GUI
+game_bar = pygame.image.load('Sprites/GUI/GameBar.png').convert_alpha()
 shop_panel = pygame.image.load('Sprites/Shop/ShopPanel.png').convert_alpha()
 open_shop = pygame.image.load('Sprites/Shop/OpenShop.png').convert_alpha()
 planet_selection_lock = pygame.image.load('Sprites/PlanetSelectionlock.png').convert_alpha()
@@ -69,6 +70,7 @@ settings_screen = pygame.transform.scale(settings_screen, (width, height))
 new_game_page = pygame.transform.scale(new_game_page, (width, height))
 load_game_page = pygame.transform.scale(load_game_page, (width, height))
 
+game_bar = pygame.transform.scale(game_bar, (1390*scale_x, 220*scale_y))
 planet_selection_lock = pygame.transform.scale(planet_selection_lock, (110*scale_x, 40*scale_y))
 planet_selection_unlock = pygame.transform.scale(planet_selection_unlock, (110*scale_x, 40*scale_y))
 shop_panel = pygame.transform.scale(shop_panel, (scale_x*413, scale_y*1054))

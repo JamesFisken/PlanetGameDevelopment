@@ -636,8 +636,7 @@ while running:
         else:
             screen.blit(open_shop, (111 * scale_x, 810 * scale_y))
 
-        end = time.time()
-        #print(end - start)
+        screen.blit(game_bar, (526*scale_x, 860*scale_y))  # display game_bar at the bottom of the screen
 
     elif game_state.get("on_load_game"):
         screen.blit(load_game_page, (0, 0))
@@ -650,6 +649,8 @@ while running:
         if button.details == "LOCKED":
             if mouse_x > button.start_x + button.min_val and mouse_x < button.start_x + button.max_val:
                 button.x = mouse_x
+                button.value = (button.x-button.min_val)/(button.max_val+button.start_x)
+                print(button.x, button.min_val, button.max_val)
         if button.active and button.visible:
             if button.shape == "Circle":
                 pygame.draw.circle(screen, (0, 0, 255), (button.x, button.y), button.radius)
@@ -849,6 +850,7 @@ while running:
             for button in buttons:
                 if button.active and button.details == "LOCKED":
                     button.details = "UNLOCKED"
+
     # print(panning)
     if panning:
         camera_offset_x = start_pan_x - mouse_x

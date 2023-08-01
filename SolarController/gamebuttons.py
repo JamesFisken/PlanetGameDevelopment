@@ -1,12 +1,12 @@
-import pygame
+
 import math
 
 class Button:
-    def __init__(self, name, tag, details, min_val, max_val, visible, x, y, *size):
+    def __init__(self, name, tag, details, min_val, max_val, visible, x, y, *size, offset_x=0, offset_y=0, value=0.0):
         self.start_x = x  # used to base the range off of this constant, since the actual x/y may vary
         self.start_y = y
-        self.x = x
-        self.y = y
+        self.x = x + offset_x
+        self.y = y + offset_y
         self.active = False
         self.visible = visible
         self.min_val = min_val  # if the button is a slider, then this value will be the minimum amount the slider can move to the left from its starting X
@@ -14,6 +14,7 @@ class Button:
         self.name = name
         self.tag = tag
         self.details = details
+        self.value = value  # custom value for buttons
 
         if len(size) == 1:
             self.shape = "Circle"
@@ -132,8 +133,9 @@ def gather_buttons(scale_x, scale_y, scale_size, screen):
         Button("delete_planet", "on_game", "", 0, 0, False, scale_x * 0, scale_y * 0,
                39 * scale_x, 39 * scale_y))
     buttons.append(
-        Button("time_slider", "on_game", "", 0, 337 * scale_x, True, scale_x * 1062, scale_y * 673,
-               28 * scale_size))
+        Button("time_slider", "on_game", "", 0, 714 * scale_x, True, scale_x * 593, scale_y * 1027,
+               40 * scale_size, offset_x=300*scale_x, value=0.5))
+
     return buttons
 
 
