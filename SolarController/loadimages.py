@@ -64,13 +64,13 @@ satellite_card_unafford = pygame.image.load('Sprites/Shop/Cards/SatelliteUnaffor
 
 
 # Transform sprites to the correct size
-space_screen = pygame.transform.scale(space_screen, (space_screen.get_width()*1.2, space_screen.get_height()*1.2))
+space_screen = pygame.transform.scale(space_screen, (space_screen.get_width()*1, space_screen.get_height()*1))
 title_screen = pygame.transform.scale(title_screen, (width, height))
 settings_screen = pygame.transform.scale(settings_screen, (width, height))
 new_game_page = pygame.transform.scale(new_game_page, (width, height))
 load_game_page = pygame.transform.scale(load_game_page, (width, height))
 
-game_bar = pygame.transform.scale(game_bar, (1390*scale_x, 220*scale_y))
+game_bar = pygame.transform.scale(game_bar, (1390*0.8*scale_x, 220*0.8*scale_y))
 planet_selection_lock = pygame.transform.scale(planet_selection_lock, (110*scale_x, 40*scale_y))
 planet_selection_unlock = pygame.transform.scale(planet_selection_unlock, (110*scale_x, 40*scale_y))
 shop_panel = pygame.transform.scale(shop_panel, (scale_x*413, scale_y*1054))
@@ -96,3 +96,8 @@ ondori_card_afford = pygame.transform.scale(ondori_card_afford, (scale_x*397, sc
 ondori_card_unafford = pygame.transform.scale(ondori_card_unafford, (scale_x*397, scale_y*190))
 satellite_card_afford = pygame.transform.scale(satellite_card_afford, (scale_x*397, scale_y*190))
 satellite_card_unafford = pygame.transform.scale(satellite_card_unafford, (scale_x*397, scale_y*190))
+
+
+# fonts
+balance_font = pygame.font.SysFont('arial', round(70*scale_size))
+income_font = pygame.font.SysFont('arial', round(50*scale_size))
