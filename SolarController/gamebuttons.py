@@ -134,9 +134,16 @@ def gather_buttons(scale_x, scale_y, scale_size, screen):
                39 * scale_x, 39 * scale_y))
 
     buttons.append(
-        Button("time_slider", "on_game", "", 0, 577 * scale_x, True, scale_x * 865, scale_y * 1038,
-               33 * scale_size, offset_x=289*scale_x, value=0.5))
+        Button("teleport_to_sun", "on_game", "", 0, 0, False, scale_x * 566, scale_y * 1006,
+               242 * scale_x, 65 * scale_y))
 
+    buttons.append(
+        Button("clear_debris", "on_game", "", 0, 0, False, scale_x * 566, scale_y * 928,
+               242 * scale_x, 65 * scale_y))
+
+    buttons.append(
+        Button("time_slider", "on_game", "", 0, 577 * scale_x, True, scale_x * 874, scale_y * 1038,
+               33 * scale_size, offset_x=298*scale_x, value=0.5))
 
     return buttons
 

@@ -70,7 +70,7 @@ settings_screen = pygame.transform.scale(settings_screen, (width, height))
 new_game_page = pygame.transform.scale(new_game_page, (width, height))
 load_game_page = pygame.transform.scale(load_game_page, (width, height))
 
-game_bar = pygame.transform.scale(game_bar, (1390*0.8*scale_x, 220*0.8*scale_y))
+game_bar = pygame.transform.scale(game_bar, (3840*0.365*scale_x, 481*0.365*scale_y))
 planet_selection_lock = pygame.transform.scale(planet_selection_lock, (110*scale_x, 40*scale_y))
 planet_selection_unlock = pygame.transform.scale(planet_selection_unlock, (110*scale_x, 40*scale_y))
 shop_panel = pygame.transform.scale(shop_panel, (scale_x*413, scale_y*1054))
