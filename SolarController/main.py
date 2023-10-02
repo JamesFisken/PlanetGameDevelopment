@@ -9,12 +9,69 @@ from loadimages import *  # starts up pygame and loads necessary images
 import numpy as np
 import threading
 import pickle
+from pygame.locals import *
 
+# Pygame Variables and setup
+running = True
+clock = pygame.time.Clock()
+# screen
+width, height = 1920, 1080
+screen = pygame.display.set_mode((width, height))
 
-# Colours
-BACKGROUND = (5, 10, 51)
-WHITE = (255, 255, 255)
-# General Variables
+# time keeping variables
+is_paused = False
+average_fps = 1
+fps = 144
+fps_list = []
+dt = 1  # delta time, so that the speed of the game isn't dependent on fps
+time_multiplier = 37630000  # this sets the speed of the game(varies)
+starting_time = 150000000  # held constant
+speed_multiplier = 0.5  # speed starts halfway
+
+# zoom
+zoom = 0.3  # the higher the value the more zoomed in you are
+min_zoom = 0.05
+max_zoom = 1.25
+
+# where the mouse is relative to the screen and thus where the zooms focus will be
+rel_mouse_x = width / 2
+rel_mouse_y = height / 2
+
+# constants
+G_CONSTANT = 6.6743 * (10 ** -11)
+SOLAR_MASS = 1.989 * 10 ** 30  # mass of the sun
+TRUE_PIXEL_DISTANCE = 1515000000  # this number was calculated by taking the distance from the true sun to the earth and dividing by 100, this means that 100 pixels will equate to the distance from earth to the sun
+
+# position calculation variables
+# this will be a value that changes the positions of all planets so that the locked planet is centered
+lock_offset_x = 0
+lock_offset_y = 0
+
+# this is where the camera is relative to the starting scene(moves with panning)
+camera_offset_x = 0
+camera_offset_y = 0
+
+start_pan_x = 0
+start_pan_y = 0
+panning = True
+
+planet_locked = True  # if there is a planet that is locked then it is true
+shop = False  # shows if on shop
+shop_page = 1  # shows current shop page
+
+balance = 5000  # players starting balance
+
+planet_place_click = 0  # used to record the state of a planet after buying it (0 = placement phase)
+placing_planet = False  # describes if a planet is being placed
+
+# saves
+save_slot = None  # records what save slot a user is saving to
+
+# fonts
+balance_text = balance_font.render(str(balance), True, (255, 255, 255))
+fade_text = []  # holds instances of animated(fading) text
+
+# screen dictionary
 game_state = {
     "on_title_screen": False,
     "on_game": False,
@@ -24,104 +81,44 @@ game_state = {
     "on_pause": False
 }
 
-# Pygame Variables and setup
-
-
-running = True
-clock = pygame.time.Clock()
-
-# time keeping variables
-is_paused = False
-average_fps = 1
-fps = 100000
-fps_list = []
-dt = 1  # delta time, so that the speed of the game isn't dependent on fps
-time_multiplier = 37630000  # this sets the speed of the game(varies)
-starting_time = 150000000  # held constant
-speed_multiplyer = 0.5  # speed starts halfway
-
-# screen
-width, height = 960, 540
-screen = pygame.display.set_mode((width, height))
-
-zoom = 0.3  # the higher the value the more zoomed in you are
-min_zoom = 0.03
-max_zoom = 1.45
-
-# where the mouse is relative to the screen and thus where the zooms focus will be
-rel_mouse_x = width / 2
-rel_mouse_y = height / 2
-
-panning = True
-
-# constants
-G_CONSTANT = 6.6743 * (10 ** -11)
-SOLAR_MASS = 1.989 * 10 ** 30  # mass of the sun
-TRUE_PIXEL_DISTANCE = 1515000000  # this number was calculated by taking the distance from the true sun to the earth and dividing by 100, this means that 100 pixels will equate to the distance from earth to the sun
-
-# global varianles
-
-# this will be a value that changes the positions of all planets so that the locked planet is centered
-lock_offset_x = 0
-lock_offset_y = 0
-
-camera_offset_x = 0
-camera_offset_y = 0
-
-start_pan_x = 0
-start_pan_y = 0
-
-planet_locked = True  # if there is a planet that is locked
-shop = False  # shows if on shop
-shop_page = 1  # shows current shop page
-
-balance = 1000000  # player balance
-
-planet_place_click = 0
-placing_planet = False
-
-#saves
-save_slot = None
-
-
-# fonts
-balance_text = balance_font.render(str(balance), True, (255, 255, 255))
-fade_text = []
 
 def save_game(game_data, slot):
     filename = f"save_slot_{slot}.dat"
-    pickled_list = copy.copy(game_data)
+    pickled_list = copy.copy(game_data)  # create a copy of the game
 
+    # encode unpicklable objects to a pickalable string
     for instance in pickled_list:
         instance.sprite_size = instance.sprite.get_size()
         instance.old_sprite_size = instance.old_sprite.get_size()
         instance.sprite = pygame.image.tostring(instance.sprite, "RGBA")
         instance.old_sprite = pygame.image.tostring(instance.old_sprite, "RGBA")
 
-
-    total_save_data = [pickled_list, [], balance, zoom]   # saves planets along with additional game data
+    total_save_data = [pickled_list, [], balance, zoom]  # saves planets along with additional game data
     with open(filename, 'wb') as save_file:
-        pickle.dump(total_save_data, save_file)
+        pickle.dump(total_save_data, save_file)  # dumps information to the file
+
+
 def load_game(slot):
     global balance
     global zoom
     filename = f"save_slot_{slot}.dat"
     try:
-        with open(filename, 'rb') as save_file:
-            game_data = pickle.load(save_file)
+        with open(filename, 'rb') as save_file:  # open save file location
+            game_data = pickle.load(save_file)  # retrieve data
 
+            # decode back to objects
             for instance in game_data[0]:
-
                 instance.sprite = pygame.image.fromstring(instance.sprite, instance.sprite_size, "RGBA")
                 instance.old_sprite = pygame.image.fromstring(instance.old_sprite, instance.old_sprite_size, "RGBA")
 
             CelestialBody.objs = CelestialBody.objs + game_data[0]
-            change_balance(game_data[2]-balance)
-            #balance = game_data[2]
-            zoom = game_data[3]
+            change_balance(game_data[2] - balance)  # change balance to the loaded balance
+            zoom = game_data[3]  # change zoom to the loaded zoom
             return game_data[0]
     except FileNotFoundError:
-        return None
+        return celestial_bodies  # if there is no save, then use default celestial bodies
+
+
 
 def update_lock_offset(locked_planet):
     global lock_offset_x, lock_offset_y
@@ -132,6 +129,7 @@ def update_lock_offset(locked_planet):
 
     lock_offset_x = blit_x - width / 2
     lock_offset_y = blit_y - height / 2
+
 
 def display(x, y):
     global lock_offset_x, lock_offset_y, camera_offset_x, camera_offset_y, planet_locked
@@ -148,16 +146,19 @@ def display(x, y):
 
     return true_x, true_y
 
+
 def is_approximately_equal(value1, value2, tolerance):
     return abs(value1 - value2) <= tolerance
 
-def calculate_opposite_angle(angle):
+
+def calculate_opposite_angle(angle):  # calculates the opposite angle(in radians)
     opposite_angle = angle + math.pi
     if opposite_angle > math.pi:
         opposite_angle -= 2 * math.pi
     return opposite_angle
 
-class FadingText:
+
+class FadingText:  # class that creates instances of fading text
     def __init__(self, screen, text, font, fade_in_duration, hold_duration, fade_out_duration, x, y, position):
         self.screen = screen
         self.text = font.render(text, True, (255, 255, 255))
@@ -167,7 +168,7 @@ class FadingText:
         self.total_duration = fade_in_duration + hold_duration + fade_out_duration
 
         self.text_alpha = 0
-        self.animation_thread = threading.Thread(target=self._animate_text, daemon=True)
+        self.animation_thread = threading.Thread(target=self._animate_text, daemon=True)  # start thread
         self.animation_thread.start()
 
         self.x = x
@@ -189,8 +190,8 @@ class FadingText:
                 self.text_alpha = int((1 - remaining_time / self.fade_out_duration) * 255)
             else:
                 break  # Exit the animation loop when one cycle is complete
-
-            time.sleep(0.016)  # Sleep for ~1 frame (assuming 60 FPS)
+            if dt != 0:
+                time.sleep(1 / dt)  # Sleep for 1 frame
 
         # Delete the instance after completing one cycle
         fade_text.remove(self)
@@ -199,6 +200,7 @@ class FadingText:
     def show(self):
         self.screen.blit(self.text, (self.x - self.text.get_width() // 2, self.y - self.text.get_height() // 2))
         self.text.set_alpha(self.text_alpha)
+
 
 class OverwriteDict:
     def __init__(self):
@@ -270,7 +272,6 @@ class CelestialBody:
                 self.radius * zoom * 2.65,
                 self.radius * zoom * 2.65))  # converts the size of the sprite to fit that of the planet's true radius
 
-
         self.locked = locked
         self.show_options = False
 
@@ -289,19 +290,21 @@ class CelestialBody:
         self.old_sprite_size = None
 
     def update(self):
+        # rearranged f=ma to a = f/m
         accel_x = self.force_x / self.mass
         accel_y = self.force_y / self.mass
 
+        # integrate acceleration to get velocity
         self.vel_x += accel_x * dt
         self.vel_y += accel_y * dt
 
+        # add velocity
         self.x += self.vel_x * dt
         self.y += self.vel_y * dt
 
+        #reset force after it has been exerted
         self.force_x = 0
         self.force_y = 0
-
-        pixels.append([self.x, self.y])
 
     def display(self):
 
@@ -316,21 +319,20 @@ class CelestialBody:
             self.true_x -= camera_offset_x
             self.true_y -= camera_offset_y
 
-
-        if self.locked:
+        if self.locked:  # if planet is locked then blit it to the center of the screen
             screen.blit(self.sprite,
-                    (width/2 - self.sprite.get_width() / 2, height/2 - self.sprite.get_height() / 2))
+                        (width / 2 - self.sprite.get_width() / 2, height / 2 - self.sprite.get_height() / 2))
         else:
             screen.blit(self.sprite,
                         (self.true_x - self.sprite.get_width() / 2, self.true_y - self.sprite.get_height() / 2))
 
-        # pygame.draw.circle(screen, (255, 0, 0), (self.true_x, self.true_y), self.radius*zoom)  # show hitbox
+        # pygame.draw.circle(screen, (255, 0, 0), (self.true_x, self.true_y), self.radius*zoom)  # show hitbox(debug)
         if self.show_options:
             if self.locked:  # if the user is locked onto the planet then display the unlock icon
                 screen.blit(planet_selection_unlock, (
-                    width/2 - planet_selection_unlock.get_width() / 2,
-                    height/2 - planet_selection_unlock.get_height() / 2))
-            else:
+                    width / 2 - planet_selection_unlock.get_width() / 2,
+                    height / 2 - planet_selection_unlock.get_height() / 2))
+            else:  # else display the lock icon to the center
                 screen.blit(planet_selection_lock, (
                     self.true_x - planet_selection_lock.get_width() / 2,
                     self.true_y - planet_selection_lock.get_height() / 2))
@@ -346,36 +348,31 @@ class CelestialBody:
         distances = np.linalg.norm(differences, axis=1) * TRUE_PIXEL_DISTANCE
 
         distances[distances < 10 * TRUE_PIXEL_DISTANCE] = 10 * TRUE_PIXEL_DISTANCE
-        forces = G_CONSTANT * self.mass * masses / distances ** 2
+        forces = G_CONSTANT * self.mass * masses / distances ** 2  # calculate the forces applied on a particular planet
 
-        normalized_dirs = differences / distances[:, np.newaxis]
-        net_force = np.sum(normalized_dirs * forces[:, np.newaxis], axis=0)
+        normalized_dirs = differences / distances[:, np.newaxis]  # find net direction
+        net_force = np.sum(normalized_dirs * forces[:, np.newaxis], axis=0)  # find net force
 
-        max_force_index = np.argmax(forces)  # Index of the planet with the greatest force
+        max_force_index = np.argmax(forces)  # Index of the planet with the greatest force(for orbit detection)
 
         prev_value = self.orbital_parent
         if other_bodies[max_force_index].mass >= self.mass:
             self.orbital_parent = other_bodies[max_force_index]
 
         if prev_value != self.orbital_parent:
-            #print(self.name, self.orbital_parent.name)
             self.angles = []
 
-
-        self.force_x += net_force[0]
+        self.force_x += net_force[0]  # update forces
         self.force_y += net_force[1]
 
         return net_force.tolist()
 
     def check_collisions(self, other_bodies):
         for body in other_bodies:
-            if self.name != "debris" or body.name != "debris":  # stops collisions with collided objects
-                distance = math.sqrt((self.x - body.x) ** 2 + (self.y - body.y) ** 2)
-                if (body.radius + self.radius) > distance:
-                    # print((body.radius + self.radius), distance)
-
+            if self.name != "debris" or body.name != "debris":  # stops collisions with collided objects(optional)
+                distance = math.sqrt((self.x - body.x) ** 2 + (self.y - body.y) ** 2)  # calculate distance between bods
+                if (body.radius + self.radius) > distance:  # if distance less than sum of radii then collision occurs
                     create_collided_planet(self, body)
-
                     return [True, self, body]
         return [False]
 
@@ -390,17 +387,20 @@ class CelestialBody:
         if self.orbital_parent in celestial_bodies:  # checks to see if the orbital_parent still exists
             if self.name != "debris":  # makes sure that debris aren't counted as they have no orbital value
 
+                # calculate delta position
                 dx = self.x - self.orbital_parent.x
                 dy = self.y - self.orbital_parent.y
 
+                # using trigonometry to calculate angle in radians
                 angle_radians = math.atan2(dy, dx)
 
                 if self.angle is None:  # set the starting angle
                     self.angle = angle_radians
-                    self.opp_angle = calculate_opposite_angle(angle_radians)  # find the opposite angle as a sort of checkpoint
+                    self.opp_angle = calculate_opposite_angle(
+                        angle_radians)  # find the opposite angle as a sort of checkpoint
                     return
 
-                if not self.cleared_checkpoint: # hasn't passed orbit mid_point
+                if not self.cleared_checkpoint:  # hasn't passed orbit mid_point
                     if is_approximately_equal(angle_radians, self.opp_angle, 0.05):  # if passed checkpoint
                         self.cleared_checkpoint = True
 
@@ -408,20 +408,20 @@ class CelestialBody:
                     if is_approximately_equal(angle_radians, self.angle, 0.05):  # if completed full orbit
                         self.cleared_checkpoint = False
 
-                        change_balance(self.orbit_value)
+                        change_balance(self.orbit_value)  # reward user for the orbit
             else:
                 self.angles = []
 
-
     @classmethod
     def update_zoom(cls, mouse_x, mouse_y, update_mouse):
-
         global rel_mouse_x, rel_mouse_y
         for obj in cls.objs:  # loop through all instances
             if update_mouse:
+                # updates mouse position
                 rel_mouse_x = mouse_x
                 rel_mouse_y = mouse_y
 
+            # uses a copy of the original sprite to avoid image deterioration
             obj.sprite = obj.old_sprite
 
             if obj.name == "Sun":
@@ -431,7 +431,7 @@ class CelestialBody:
             else:
                 obj.sprite = pygame.transform.scale(obj.sprite, (
                     obj.radius * zoom * 2.65,
-                    obj.radius * zoom * 2.65))  # converts the size of the sprite to fit that of the planet's true radius
+                    obj.radius * zoom * 2.65))  # converts the size of the sprite to fit that of the planet's true radi
 
     @classmethod
     def change_lock(cls, body):
@@ -458,27 +458,31 @@ shop_cards.append(ShopCard("Ondori", 50000, 2, 1, ondori_card_afford, ondori_car
 shop_cards.append(ShopCard("Malakorus", 80000, 2, 2, malakorus_card_afford, malakorus_card_unafford))
 shop_cards.append(ShopCard("Enduros", 150000, 2, 3, enduros_card_afford, enduros_card_unafford))
 
-# create made_celestial_bodies
-avaiable_celestial_bodies.append(CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0000010, 5, vulkan, False, "Debris", 0))
-avaiable_celestial_bodies.append(CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0000010, 18, moon, False, "Moon", 40))
-avaiable_celestial_bodies.append(CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0005000, 40, earth, False, "Earth", 110))
-avaiable_celestial_bodies.append(CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0000001, 8, satellite, False, "Satellite", 315))
-avaiable_celestial_bodies.append(CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0100000, 55, jupiter, False, "Jupiter", 1100))
-
+# create pre-made celestial_bodies
+avaiable_celestial_bodies.append(
+    CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0000010, 5, vulkan, False, "Debris", 0))
+avaiable_celestial_bodies.append(
+    CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0000010, 18, moon, False, "Moon", 40))
+avaiable_celestial_bodies.append(
+    CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0005000, 40, earth, False, "Earth", 110))
+avaiable_celestial_bodies.append(
+    CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0000001, 8, satellite, False, "Satellite", 315))
+avaiable_celestial_bodies.append(
+    CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0100000, 55, jupiter, False, "Jupiter", 1100))
 avaiable_celestial_bodies.append(
     CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0150000, 70, luxaurantius, False, "Lux Aurantius", 3600))
-avaiable_celestial_bodies.append(CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0175000, 90, ondori, False, "Ondori", 7500))
-avaiable_celestial_bodies.append(CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0200000, 130, malakorus, False, "Malakorus", 12000))
 avaiable_celestial_bodies.append(
-    CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0500000, 160, enduros, False, "Enduros", 30000))
-
+    CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0175000, 90, ondori, False, "Ondori", 7500))
+avaiable_celestial_bodies.append(
+    CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0200000, 130, malakorus, False, "Malakorus", 12000))
+avaiable_celestial_bodies.append(
+    CelestialBody(0, 0, 0, 0, SOLAR_MASS * 0.0300000, 160, enduros, False, "Enduros", 30000))
 
 def get_button(name, buttons):
     for button in buttons:
         if button.name == name:
             return button
     return False
-
 
 def select_button(buttons, function):
     for button in buttons:
@@ -490,7 +494,7 @@ def select_button(buttons, function):
             button.active = function
 
 
-def change_shop(status):
+def change_shop(status):  # opens/closes shop and activates/deactivates various buttons
     global shop
     get_button("close_shop", buttons).active = status
     get_button("open_shop", buttons).active = not status
@@ -506,7 +510,7 @@ def change_shop(status):
     get_button("buy_4", buttons).active = status
 
 
-def change_scene(newScene, gameState, buttons):
+def change_scene(newScene, gameState, buttons):  # function that changes the scene using the game_state dictionary
     for key in gameState.keys():
         if key == newScene:
             gameState[key] = True
@@ -520,21 +524,23 @@ def change_scene(newScene, gameState, buttons):
     change_shop(False)
 
 
-def convert_to_blit_coords(x, y, sprite_width, sprite_height):
+def convert_to_blit_coords(x_pos, y_pos, sprite_width, sprite_height):
+    # takes the true coordinates on the pygame screen and converts them to the game's coordinate setting
     if not planet_locked:
         x = ((
-                     x - width / 2 + lock_offset_x + camera_offset_x + sprite_width / 2) / zoom) + rel_mouse_x - sprite_width / 2 / zoom
+                     x_pos - width / 2 + lock_offset_x + camera_offset_x + sprite_width / 2) / zoom) + rel_mouse_x - sprite_width / 2 / zoom
         y = ((
-                     y - height / 2 + lock_offset_y + camera_offset_y + sprite_height / 2) / zoom) + rel_mouse_y - sprite_height / 2 / zoom
+                     y_pos - height / 2 + lock_offset_y + camera_offset_y + sprite_height / 2) / zoom) + rel_mouse_y - sprite_height / 2 / zoom
     else:
         x = ((
-                     x - width / 2 + lock_offset_x + sprite_width / 2) / zoom) + rel_mouse_x - sprite_width / 2 / zoom
+                     x_pos - width / 2 + lock_offset_x + sprite_width / 2) / zoom) + rel_mouse_x - sprite_width / 2 / zoom
         y = ((
-                     y - height / 2 + lock_offset_y + sprite_width / 2) / zoom) + rel_mouse_y - sprite_height / 2 / zoom
+                     y_pos - height / 2 + lock_offset_y + sprite_width / 2) / zoom) + rel_mouse_y - sprite_height / 2 / zoom
     return x, y
 
 
 def scale_number(num):
+    # function that squishes very small numbers between 0 and 0.9, similar to the RELU function
     if num < 1e-12:
         return 0
     elif num > 1e-6:
@@ -600,7 +606,6 @@ def create_collided_planet(body1, body2):
     impact_violence = scale_number(impact_violence)
     inverse_impact_violence = 1 - impact_violence
 
-
     '''
     if the mass of the collision is so minute then don't allow them to split
     also don't allow them to split if there are too many planets
@@ -621,21 +626,21 @@ def create_collided_planet(body1, body2):
     # calculate increase in radius
     new_radius = math.sqrt((total_area * inverse_impact_violence) / math.pi)
 
-    #calculate detariation in value
-    valuation *= new_radius/max(body1.radius, body2.radius)
+    # calculate detariation in value
+    valuation *= new_radius / max(body1.radius, body2.radius)
 
     # spawn in the main bulk of the planet
-    new_planet = CelestialBody(pos_x, pos_y, vel_x, vel_y, total_mass * inverse_impact_violence, new_radius, main_body.old_sprite,
+    new_planet = CelestialBody(pos_x, pos_y, vel_x, vel_y, total_mass * inverse_impact_violence, new_radius,
+                               main_body.old_sprite,
                                False, name, round(valuation))
 
     new_planet.show_options = main_body.show_options  # keep the options value to the major planet
     new_planet.locked = main_body.locked  # keep the locked value to the major planet
-    #various orbit information
+    # various orbit information
     new_planet.angle = main_body.angle  # the angle at which a full orbit takes place
     new_planet.opp_angle = main_body.opp_angle  # the angle at which half a full orbit takes place, used as a checkpoint before full orb
     new_planet.orbital_parent = main_body.orbital_parent  # planet that self is orbiting around if one exists
     new_planet.cleared_checkpoint = main_body.cleared_checkpoint  # set to true once a planet has passed self.opp_angle
-
 
     # substract area and mass off to account for the main bulk of the
     total_mass -= (total_mass * inverse_impact_violence)
@@ -644,7 +649,7 @@ def create_collided_planet(body1, body2):
     celestial_bodies.append(new_planet)
     CelestialBody.objs.append(new_planet)
 
-    # amount of debris follows this formula y=\operatorname{round}\left(\left(5\right)x+2\right)
+    #calculate amount of debris  n = 10x
     amount_of_debris = round(10 * impact_violence)
     if amount_of_debris > 0:
         debris_radius = math.sqrt((total_area / amount_of_debris) / math.pi)
@@ -690,14 +695,15 @@ def draw_dotted_line(surface, start_point, end_point, start_distance, dot_radius
     x = start_point[0]
     y = start_point[1]
     for _ in range(int(length / dot_distance)):
-        # print(math.sqrt((x-start_point[0])**2 + (y-start_point[1])**2))
         if math.sqrt((x - start_point[0]) ** 2 + (y - start_point[1]) ** 2) > start_distance:
             pygame.draw.circle(surface, line_color, (int(x), int(y)), dot_radius)
         x += x_step * dot_distance
         y += y_step * dot_distance
 
+
 def round_upwards(value, rounding_value):
     return (value // rounding_value) * (rounding_value)
+
 
 def display_background(transformed_space_screen):
     sprite_width = transformed_space_screen.get_width()
@@ -710,28 +716,39 @@ def display_background(transformed_space_screen):
     x1, y1 = (round_upwards(top_left[0] * zoom, sprite_width), round_upwards(top_left[1] * zoom, sprite_height))
     x2, y2 = (round_upwards(bottom_right[0] * zoom, sprite_width), round_upwards(bottom_right[1] * zoom, sprite_height))
 
+    # loop through all the x and y positions of where the background is meant to be displayed
     for x in range(round((x2 - x1) / sprite_width)):
         for y in range(round((y2 - y1) / sprite_height)):
             screen.blit(transformed_space_screen,
                         ((x1 + start_x) + sprite_width * x, ((y1 + start_y) + sprite_height * y)))
 
+def buy_planet(position):
+    global placing_planet, planet_name
+    for card in shop_cards:
+        if card.page == shop_page and card.position == position:
+            if balance >= card.cost:
+                change_balance(-card.cost)
+                change_shop(False)  # close shop
+                placing_planet = True
+                planet_name = card.name
 
 def change_balance(change_amount):
+    # changes the users balance and starts the animation text
     global balance, balance_text
 
     if change_amount >= 0:
-        text_string = "+" + str(change_amount)
+        text_string = "+" + str(change_amount)  # add positive sign
     else:
         text_string = str(change_amount)
 
-    balance += change_amount
+    balance += change_amount  #increase/decrease balance
     balance_text = balance_font.render(str(balance), True, (255, 255, 255))
-    fade_text.append(FadingText(screen, text_string, income_font, 1000, 100, 500, 1700*scale_x, 980*scale_y + len(fade_text)*-45*scale_y, "empty"))
-
+    fade_text.append(FadingText(screen, text_string, income_font, 1000, 100, 500, 1730 * scale_x,
+                                980 * scale_y + len(fade_text) * -45 * scale_y, "empty"))
 
 
 # pre-loop setup
-buttons = gamebuttons.gather_buttons(scale_x, scale_y, scale_size, screen)  # setups the buttons in the gamebuttons file
+buttons = gamebuttons.gather_buttons(scale_x, scale_y, scale_size)  # setups the buttons in the gamebuttons file
 change_scene("on_title_screen", game_state, buttons)  # start the game on the title screen
 
 counter = 0
@@ -740,7 +757,6 @@ while running:
     frame_fps = clock.get_fps()
     dt = clock.tick(fps) / 1000 * time_multiplier  # find the amount of time between each frame in seconds
     mouse_x, mouse_y = pygame.mouse.get_pos()  # gets user mouse inputs
-
 
     if game_state.get("on_title_screen"):  # if user is on the title screen
         screen.blit(title_screen, (0, 0))  # display the title screen
@@ -754,10 +770,8 @@ while running:
             if body.locked == True:
                 update_lock_offset(body)
 
-
-
         transformed_space_screen = pygame.transform.scale(space_screen, (
-        space_screen.get_width() * zoom, space_screen.get_height() * zoom))
+            space_screen.get_width() * zoom, space_screen.get_height() * zoom))  # scale the background
         display_background(transformed_space_screen)  # displays the infinitely tiled space background
 
         for i, body in enumerate(celestial_bodies):
@@ -767,14 +781,14 @@ while running:
                 celestial_bodies.remove(collision[1])  # remove original planets
                 celestial_bodies.remove(collision[2])
 
-        for i, body in enumerate(celestial_bodies):
+        for i, body in enumerate(celestial_bodies):  # loop through each planet
             other_bodies = [x for j, x in enumerate(celestial_bodies) if
                             j != i and x.mass > SOLAR_MASS * 0.000010]  # append planets excluding self
             if len(other_bodies) > 0:
-                body.apply_gravity(other_bodies)
-                body.check_for_orbit()
-            body.update()
-            body.display()
+                body.apply_gravity(other_bodies)  # apply gravity to the planet
+                body.check_for_orbit()  # check planet for orbit
+            body.update()  # update velocity of the planet
+            body.display()  # display planet
 
             if body.show_options:  # selected onto a planet
                 # positioning of the planet menu buttons
@@ -805,9 +819,9 @@ while running:
                     # pygame.draw.line(screen, (255, 255, 255), (placement_x, placement_y), (mouse_x, mouse_y), 3)
                     distance = math.sqrt((placement_x - mouse_x) ** 2 + (placement_y - mouse_y) ** 2)
                     draw_dotted_line(screen, (placement_x, placement_y), (mouse_x, mouse_y), (planet.radius + 5) * zoom,
-                                     20 * zoom, (distance + 1) * 0.17 * zoom)
+                                     20 * zoom, (distance + 1) * 0.3 * zoom)
                 if planet.name == planet_name and planet_place_click == 2:
-                    # add planet
+                    # add a new planet
                     new_planet = copy.copy(planet)
 
                     x, y = convert_to_blit_coords(placement_x, placement_y, new_planet.sprite.get_width(),
@@ -823,6 +837,7 @@ while running:
                                 add_vel_x = mass.vel_x
                                 add_vel_y = mass.vel_y
                                 break
+                        # if locked on a planet add that planets velocity along with the difference in (x,y)/constant
                         new_planet.vel_x = ((x2 - x) / 150000000) + add_vel_x
                         new_planet.vel_y = ((y2 - y) / 150000000) + add_vel_y
                     else:
@@ -832,7 +847,6 @@ while running:
                     #  clear planet orbit and forces
                     new_planet.orbit_positions = []
                     new_planet.forces = []
-
 
                     celestial_bodies.append(new_planet)
                     # add to register
@@ -864,7 +878,7 @@ while running:
 
         for text in fade_text:
             text.show()
-        screen.blit(balance_text, (1605 * scale_x, 995 * scale_y))  # balance text
+        screen.blit(balance_text, (1640 * scale_x, 995 * scale_y))  # balance text
 
 
     elif game_state.get("on_load_game"):
@@ -889,8 +903,8 @@ while running:
 
                 # drag button logic below
                 if button.name == "time_slider":
-                    speed_multiplyer = button.value ** 2
-                    time_multiplier = starting_time * speed_multiplyer  # change time depending on the time slider
+                    speed_multiplier = button.value ** 2
+                    time_multiplier = starting_time * speed_multiplier  # change time depending on the time slider
         if button.active and button.visible:
             if button.shape == "Circle":
                 pygame.draw.circle(screen, (0, 0, 255), (button.x, button.y), button.radius)
@@ -906,10 +920,10 @@ while running:
             if game_state.get("on_game"):  # if on the main game tab
                 if event.key == 27:  # 27 is the keycode for escape
 
-                    #save game
+                    # save game
                     save_game(celestial_bodies, save_slot)
 
-                    #exit game
+                    # exit game
                     pygame.quit()
                     sys.exit()
 
@@ -977,6 +991,7 @@ while running:
                     if button.active:
                         if button.is_clicked(mouse_x, mouse_y):
 
+                            # button click functionality checker
                             if button.name == "settings":
                                 change_scene("on_settings", game_state, buttons)
                                 break
@@ -1012,7 +1027,6 @@ while running:
                                 celestial_bodies = load_game(2)
                                 save_slot = 2
 
-
                                 change_scene("on_game", game_state, buttons)
                             if button.name == "start_load_game3":
                                 save_slot = 3
@@ -1028,16 +1042,14 @@ while running:
                                 save_slot = 3
                                 change_scene("on_game", game_state, buttons)
 
-                            # shop buttons
-
+                            #shop buttons
                             if button.name == "open_shop" and not shop:
                                 change_shop(True)
                                 break
-
                             if button.name == "close_shop" and shop:
                                 change_shop(False)
                                 break
-
+                            # change shop pages
                             if button.name == "shop_page_1" and shop:
                                 shop_page = 1
                             if button.name == "shop_page_2" and shop:
@@ -1049,37 +1061,13 @@ while running:
 
                             # check which button has been clicked and then link that button to the card
                             if button.name == "buy_1" and shop:
-                                for card in shop_cards:
-                                    if card.page == shop_page and card.position == 0:
-                                        if balance >= card.cost:
-                                            change_balance(-card.cost)
-                                            change_shop(False)  # close shop
-                                            placing_planet = True
-                                            planet_name = card.name
+                                buy_planet(0)
                             if button.name == "buy_2" and shop:
-                                for card in shop_cards:
-                                    if card.page == shop_page and card.position == 1:
-                                        if balance >= card.cost:
-                                            change_balance(-card.cost)
-                                            change_shop(False)  # close shop
-                                            placing_planet = True
-                                            planet_name = card.name
+                                buy_planet(1)
                             if button.name == "buy_3" and shop:
-                                for card in shop_cards:
-                                    if card.page == shop_page and card.position == 2:
-                                        if balance >= card.cost:
-                                            change_balance(-card.cost)
-                                            change_shop(False)  # close shop
-                                            placing_planet = True
-                                            planet_name = card.name
+                                buy_planet(2)
                             if button.name == "buy_4" and shop:
-                                for card in shop_cards:
-                                    if card.page == shop_page and card.position == 3:
-                                        if balance >= card.cost:
-                                            change_balance(-card.cost)
-                                            change_shop(False)  # close shop
-                                            placing_planet = True
-                                            planet_name = card.name
+                                buy_planet(3)
 
                             # planet buttons
                             if button.name == "lock_to_planet":
@@ -1088,21 +1076,28 @@ while running:
                                         if body.locked:
                                             body.change_lock(None)
                                             planet_locked = False  # show that the user isn't locked onto any planet
-                                            # centre for seemless transition between panning mode and locked mode
-                                            start_pan_x = width / 2 + mouse_x - width/2
-                                            start_pan_y = height / 2 + mouse_y - height/2
+                                            # centre for seamless transition between panning mode and locked mode
+                                            start_pan_x = width / 2 + mouse_x - width / 2
+                                            start_pan_y = height / 2 + mouse_y - height / 2
 
                                         else:
                                             body.change_lock(body)
                                             planet_locked = True
+
                             if button.name == "delete_planet":
                                 for body in celestial_bodies:
                                     if body.show_options:  # if this is the planet that the user is selected on
-                                        if body.locked:
-                                            planet_locked = False  # if the planet is also locked then go into panning mode
+                                        if body.name != "Sun":  # makes sure users cannot delete the sun
+                                            if body.locked:
+                                                # unlock the planet
+                                                body.change_lock(None)
+                                                planet_locked = False  # if the planet is also locked then go into panning mode
+                                                # centre for seamless transition between panning mode and locked mode
+                                                start_pan_x = width / 2 + mouse_x - width / 2
+                                                start_pan_y = height / 2 + mouse_y - height / 2
 
-                                        celestial_bodies.remove(body)  # remove planet
-                                select_button(buttons, False)
+                                            celestial_bodies.remove(body)  # remove planet
+                                            select_button(buttons, False)
 
                             if button.name == "clear_debris":
                                 deletions = []
@@ -1110,11 +1105,11 @@ while running:
                                     if body.name == "debris":
                                         deletions.append(i)  # create a list of indexes that need to be removed
                                 for i, x in enumerate(deletions):
-                                    celestial_bodies.pop(x-i)  # remove bodies by their indexes
+                                    celestial_bodies.pop(x - i)  # remove bodies by their indexes
 
                             if button.name == "teleport_to_sun":
                                 for body in celestial_bodies:
-                                    if body.name == "Sun":
+                                    if body.name == "Sun":  # get the sun object
                                         body.change_lock(body)
                                         planet_locked = True
                                         break
@@ -1140,21 +1135,5 @@ while running:
             break
     if hovering is False:
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-
-    '''
-    print("-----------------------------------")
-    print("                                   ")
-    print("rel_mouse", rel_mouse_x, rel_mouse_y)
-    print("lock offset", lock_offset_x, lock_offset_y)
-    print("camera_offset", camera_offset_x, camera_offset_y)
-    print("start_pan", start_pan_x, start_pan_y)
-    print("zoom, ", zoom)
-    '''
-
-    fps_list.append(frame_fps)
-    if len(fps_list) > 100:
-        average_fps = sum(fps_list) / len(fps_list)
-        # print(average_fps, min(fps_list))
-        fps_list = []
 
     pygame.display.flip()

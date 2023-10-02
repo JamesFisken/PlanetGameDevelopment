@@ -1,12 +1,10 @@
 import pygame
-from pygame.locals import *
 pygame.init()
 
-width, height = 960, 540
+width, height = 1920, 1080
 flags = pygame.HWSURFACE | pygame.DOUBLEBUF  # Enable hardware surface and double buffering
 screen = pygame.display.set_mode((width, height), flags)
 #screen
-width, height = 960, 540
 scale_x, scale_y = width / 1920, height / 1080 # used for changing the scale of sprites with the aspect ratio
 scale_size = min(scale_x, scale_y)
 
